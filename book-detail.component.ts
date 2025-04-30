@@ -1,19 +1,19 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, ActivatedRoute, ParamMap } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { BookService } from './book.service';
 import { CommonModule } from '@angular/common';
 import { Book } from './book.model';
-import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-book-detail',
   templateUrl: './book-detail.component.html',
   styleUrls: ['./book-detail.component.css'],
-    imports: [CommonModule]
-    
+  imports: [CommonModule]
 })
 export class BookDetailComponent implements OnInit {
   book: Book | undefined;
+  errorMessage: string | undefined;
+  loading = true;
 
   constructor(
     private route: ActivatedRoute,
@@ -23,13 +23,24 @@ export class BookDetailComponent implements OnInit {
 
   ngOnInit(): void {
     const bookId = this.route.snapshot.paramMap.get('id');
+    
     if (bookId) {
-      this.bookService.getBookDetails(bookId).subscribe(data => {
-        this.book = data;
+      // Convert string ID to number since backend expects a number
+      this.bookService.getBookDetails(+bookId).subscribe({
+        next: (data) => {
+          this.book = data;
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error fetching book details:', error);
+          this.errorMessage = 'Unable to load book details. Please try again later.';
+          this.loading = false;
+        }
       });
-    }
-    else {
+    } else {
       this.book = undefined;
+      this.loading = false;
+      this.errorMessage = 'No book ID provided.';
     }
   }
 }
