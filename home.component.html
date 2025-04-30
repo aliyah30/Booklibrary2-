@@ -6,7 +6,6 @@
 
 <div class="book-list" *ngIf="books.length">
     <div *ngFor="let book of books" class="book-item">
-        <img [src]="book.cover" [alt]="book.title + ' cover'" width="100" height="150"> 
         <h3>{{book.title}}</h3>
         <p>Author: {{book.author}}</p>
         <p>ISBN: {{book.isbn}}</p>
