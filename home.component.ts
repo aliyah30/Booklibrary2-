@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Book } from '../book-detail/book.model';
-import { BookService } from '../book-detail/book.service';
+import { Book } from './book.model';
+import { BookService } from './book.service';
 
 @Component({
   selector: 'app-home',
