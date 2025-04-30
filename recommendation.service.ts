@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, catchError } from 'rxjs';
-import { Book } from '../book-detail/book.model';
+import { Book } from './book.model';
 
 interface Recommendations {
   byAuthor: Book[];
