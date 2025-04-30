@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
@@ -13,11 +14,45 @@ import { Router } from '@angular/router';
 export class LoginComponent {
   username: string = '';
   password: string = '';
-
-  constructor(private router: Router) {}
-
+  errorMessage: string = '';
+  isLoading: boolean = false;
+  
+  constructor(
+    private router: Router,
+    private http: HttpClient
+  ) {}
+  
   onLogin() {
-    // Simply navigate to profile without authentication
-    this.router.navigate(['/profile']);
+    if (!this.username || !this.password) {
+      this.errorMessage = 'Username and password are required';
+      return;
+    }
+    
+    this.isLoading = true;
+    this.errorMessage = '';
+    
+    // Send POST request to login API
+    this.http.post<any>('http://localhost:5000/api/login', {
+      username: this.username,
+      password: this.password
+    }).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        if (response.success) {
+          // Store user info in localStorage or a service
+          localStorage.setItem('user_id', response.user_id);
+          localStorage.setItem('username', response.username);
+          // Navigate to profile
+          this.router.navigate(['/profile']);
+        } else {
+          this.errorMessage = response.message || 'Login failed';
+        }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = error.error?.message || 'An error occurred. Please try again.';
+        console.error('Login error', error);
+      }
+    });
   }
 }
