@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -12,7 +12,7 @@ import { BookService } from '../book-detail/book.service';
   standalone: true, 
   imports: [CommonModule, FormsModule, RouterLink]
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
   searchQuery: string = '';
   books: Book[] = [];
 
