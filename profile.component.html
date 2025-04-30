@@ -1,58 +1,80 @@
+<!-- profile.component.html -->
 <div class="profile-container">
-    <h2>{{ user.name }}'s Profile</h2>
-    
-    <div class="user-details">
-        <p><strong>Username:</strong> {{ user.username }}</p>
-        <p><strong>Email:</strong> {{ user.email }}</p>
-    </div>
-  
-    <div class="borrowing-history">
-        <h3>Borrowing History</h3>
-        <ul>
-            <li *ngFor="let book of borrowingHistory">
-                <strong>{{ book.title }}</strong> - {{ book.author }}
-                <span>Returned on: {{ book.publication_date }}</span>
-            </li>
-        </ul>
+  <!-- Loading state -->
+  <div *ngIf="isLoading" class="loading-indicator">
+    <p>Loading your profile...</p>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="errorMessage" class="error-message">
+    <p>{{ errorMessage }}</p>
+    <button routerLink="/login">Go to Login</button>
+  </div>
+
+  <!-- User profile information -->
+  <div *ngIf="user && !isLoading" class="user-profile">
+    <div class="profile-header">
+      <h2>{{ user.name }}'s Profile</h2>
+      <button (click)="logout()" class="logout-btn">Logout</button>
     </div>
 
-    <div class="recommendations-section">
-        <h3>Recommended Books</h3>
-        
-        <div class="recommendation-category">
-            <h4>Based on Authors You've Read</h4>
-            <div class="book-recommendations">
-                <div *ngFor="let book of recommendations.byAuthor" class="book-card">
-                    <img [src]="book.cover" [alt]="book.title" class="book-cover">
-                    <h5>{{ book.title }}</h5>
-                    <p>By {{ book.author }}</p>
-                    <button [routerLink]="['/book', book.book_id]" routerLinkActive="active">View Details</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="recommendation-category">
-            <h4>Similar Time Period</h4>
-            <div class="book-recommendations">
-                <div *ngFor="let book of recommendations.byDate" class="book-card">
-                    <img [src]="book.cover" [alt]="book.title" class="book-cover">
-                    <h5>{{ book.title }}</h5>
-                    <p>Published: {{ book.publication_date }}</p>
-                    <button [routerLink]="['/book', book.book_id]" routerLinkActive="active">View Details</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="recommendation-category">
-            <h4>You Might Also Like</h4>
-            <div class="book-recommendations">
-                <div *ngFor="let book of recommendations.similar" class="book-card">
-                    <img [src]="book.cover" [alt]="book.title" class="book-cover">
-                    <h5>{{ book.title }}</h5>
-                    <p>By {{ book.author }}</p>
-                    <button [routerLink]="['/book', book.book_id]" routerLinkActive="active">View Details</button>
-                </div>
-            </div>
-        </div>
+    <div class="user-info">
+      <p><strong>Username:</strong> {{ user.username }}</p>
+      <p><strong>Email:</strong> {{ user.email }}</p>
     </div>
+
+    <!-- Borrowing history section -->
+    <div class="borrowing-section">
+      <h3>Your Borrowing History</h3>
+      <div *ngIf="borrowingHistory.length === 0" class="empty-list">
+        <p>You haven't borrowed any books yet.</p>
+      </div>
+      <div *ngIf="borrowingHistory.length > 0" class="book-list">
+        <div *ngFor="let book of borrowingHistory" class="book-item">
+          <h4><a [routerLink]="['/books', book.book_id]">{{ book.title }}</a></h4>
+          <p>by {{ book.author }}</p>
+          <p class="book-details">ISBN: {{ book.isbn }}</p>
+          <p class="book-details">Published: {{ book.publication_date | date }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommendations section -->
+    <div class="recommendations-section" *ngIf="borrowingHistory.length > 0">
+      <h3>Recommended Books</h3>
+      
+      <!-- Books by same authors -->
+      <div *ngIf="recommendations.byAuthor.length > 0" class="recommendation-category">
+        <h4>Books by Authors You've Read</h4>
+        <div class="book-list">
+          <div *ngFor="let book of recommendations.byAuthor" class="book-item">
+            <h4><a [routerLink]="['/books', book.book_id]">{{ book.title }}</a></h4>
+            <p>by {{ book.author }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Books from similar time periods -->
+      <div *ngIf="recommendations.byDate.length > 0" class="recommendation-category">
+        <h4>Books from Similar Time Periods</h4>
+        <div class="book-list">
+          <div *ngFor="let book of recommendations.byDate" class="book-item">
+            <h4><a [routerLink]="['/books', book.book_id]">{{ book.title }}</a></h4>
+            <p>by {{ book.author }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Similar books -->
+      <div *ngIf="recommendations.similar.length > 0" class="recommendation-category">
+        <h4>Books You Might Like</h4>
+        <div class="book-list">
+          <div *ngFor="let book of recommendations.similar" class="book-item">
+            <h4><a [routerLink]="['/books', book.book_id]">{{ book.title }}</a></h4>
+            <p>by {{ book.author }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
