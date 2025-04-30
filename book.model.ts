@@ -1,12 +1,10 @@
 export interface Book {
-  cover: any;
-    book_id: number| undefined;
-     title: string | undefined;
-     author: string | undefined;
-     isbn: string | undefined;
-     publication_date :string | undefined;
-     total_copies: number | undefined;
-     available_copies: number | undefined;
-  }
-  
+  book_id: number;
+  title: string;
+  author: string;
+  isbn: string;
+  publication_date: string;
+  total_copies: number;
+  available_copies: number;
+}
   
