@@ -1,0 +1,58 @@
+<div class="profile-container">
+    <h2>{{ user.name }}'s Profile</h2>
+    
+    <div class="user-details">
+        <p><strong>Username:</strong> {{ user.username }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+    </div>
+  
+    <div class="borrowing-history">
+        <h3>Borrowing History</h3>
+        <ul>
+            <li *ngFor="let book of borrowingHistory">
+                <strong>{{ book.title }}</strong> - {{ book.author }}
+                <span>Returned on: {{ book.publication_date }}</span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="recommendations-section">
+        <h3>Recommended Books</h3>
+        
+        <div class="recommendation-category">
+            <h4>Based on Authors You've Read</h4>
+            <div class="book-recommendations">
+                <div *ngFor="let book of recommendations.byAuthor" class="book-card">
+                    <img [src]="book.cover" [alt]="book.title" class="book-cover">
+                    <h5>{{ book.title }}</h5>
+                    <p>By {{ book.author }}</p>
+                    <button [routerLink]="['/book', book.book_id]" routerLinkActive="active">View Details</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="recommendation-category">
+            <h4>Similar Time Period</h4>
+            <div class="book-recommendations">
+                <div *ngFor="let book of recommendations.byDate" class="book-card">
+                    <img [src]="book.cover" [alt]="book.title" class="book-cover">
+                    <h5>{{ book.title }}</h5>
+                    <p>Published: {{ book.publication_date }}</p>
+                    <button [routerLink]="['/book', book.book_id]" routerLinkActive="active">View Details</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="recommendation-category">
+            <h4>You Might Also Like</h4>
+            <div class="book-recommendations">
+                <div *ngFor="let book of recommendations.similar" class="book-card">
+                    <img [src]="book.cover" [alt]="book.title" class="book-cover">
+                    <h5>{{ book.title }}</h5>
+                    <p>By {{ book.author }}</p>
+                    <button [routerLink]="['/book', book.book_id]" routerLinkActive="active">View Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
