@@ -1,68 +1,88 @@
 import { Injectable } from '@angular/core';
-import { Observable, forkJoin, map } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of, catchError } from 'rxjs';
 import { Book } from '../book-detail/book.model';
-import { BookService } from '../book-detail/book.service';
+
+interface Recommendations {
+  byAuthor: Book[];
+  byDate: Book[];
+  similar: Book[];
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class RecommendationService {
-  constructor(private bookService: BookService) {}
+  private apiUrl = 'http://localhost:5000/api/books';
 
-  getRecommendations(borrowedBooks: Book[]): Observable<{
-    byAuthor: Book[],
-    byDate: Book[],
-    similar: Book[]
-  }> {
-    return forkJoin({
-      allBooks: this.bookService.getBooks(),
-      similar: this.getRecommendationsByHistory(borrowedBooks)
-    }).pipe(
-      map(({ allBooks, similar }) => ({
-        byAuthor: this.getBooksByAuthors(allBooks, borrowedBooks),
-        byDate: this.getBooksByDate(allBooks, borrowedBooks),
-        similar
-      }))
-    );
-  }
+  constructor(private http: HttpClient) {}
 
-  private getRecommendationsByHistory(borrowedBooks: Book[]): Observable<Book[]> {
-    return this.bookService.getBooks().pipe(
-      map(books =>
-        books
-          .filter(book => !borrowedBooks.some(b => b.book_id === book.book_id))
-          .slice(0, 3)
-      )
-    );
-  }
+  /**
+   * Gets book recommendations based on user's borrowing history
+   */
+  getRecommendations(borrowedBooks: Book[]): Observable<Recommendations> {
+    // If there's no borrowing history, return empty recommendations
+    if (!borrowedBooks || borrowedBooks.length === 0) {
+      return of({ byAuthor: [], byDate: [], similar: [] });
+    }
 
-  private getBooksByAuthors(allBooks: Book[], borrowedBooks: Book[]): Book[] {
-    const authors = new Set(borrowedBooks.map(b => b.author));
-    return allBooks
-      .filter(book =>
-        authors.has(book.author) &&
-        !borrowedBooks.some(b => b.book_id === book.book_id)
-      )
-      .slice(0, 3);
-  }
-
-  private getBooksByDate(allBooks: Book[], borrowedBooks: Book[]): Book[] {
-    const avgDate = this.getAveragePublicationDate(borrowedBooks);
-    return allBooks
-      .filter(book => !borrowedBooks.some(b => b.book_id === book.book_id))
-      .sort((a, b) => {
-        const da = new Date(a.publication_date).getTime();
-        const db = new Date(b.publication_date).getTime();
-        return Math.abs(da - avgDate.getTime()) - Math.abs(db - avgDate.getTime());
+    // Extract authors from borrowed books
+    const authors = [...new Set(borrowedBooks.map(book => book.author))];
+    
+    // Extract publication years to find books from similar time periods
+    const publicationYears = borrowedBooks
+      .map(book => new Date(book.publication_date).getFullYear())
+      .filter(year => !isNaN(year));
+    
+    // Get average publication year
+    const avgYear = publicationYears.length > 0 ? 
+      Math.round(publicationYears.reduce((sum, year) => sum + year, 0) / publicationYears.length) : 
+      null;
+    
+    // Create a year range (±5 years from average)
+    const yearRange = avgYear ? [avgYear - 5, avgYear + 5] : null;
+    
+    // Get all books to filter for recommendations
+    return this.http.get<Book[]>(this.apiUrl).pipe(
+      catchError(error => {
+        console.error('Error fetching recommendations:', error);
+        return of([]);
+      }),
+      // Create recommendation categories
+      (books$) => new Observable<Recommendations>(observer => {
+        books$.subscribe(allBooks => {
+          // Books by same authors but not already borrowed
+          const byAuthor = allBooks.filter(book => 
+            authors.includes(book.author) && 
+            !borrowedBooks.some(borrowed => borrowed.book_id === book.book_id)
+          );
+          
+          // Books from similar time periods
+          const byDate = yearRange ? 
+            allBooks.filter(book => {
+              const bookYear = new Date(book.publication_date).getFullYear();
+              return !isNaN(bookYear) && 
+                bookYear >= yearRange[0] && 
+                bookYear <= yearRange[1] &&
+                !borrowedBooks.some(borrowed => borrowed.book_id === book.book_id) &&
+                !byAuthor.some(authorBook => authorBook.book_id === book.book_id);
+            }) : [];
+          
+          // Pick some other books not already recommended
+          const similar = allBooks.filter(book => 
+            !borrowedBooks.some(borrowed => borrowed.book_id === book.book_id) &&
+            !byAuthor.some(authorBook => authorBook.book_id === book.book_id) &&
+            !byDate.some(dateBook => dateBook.book_id === book.book_id)
+          ).slice(0, 5); // Limit to 5 recommendations
+          
+          observer.next({ 
+            byAuthor: byAuthor.slice(0, 5), // Limit to 5 recommendations
+            byDate: byDate.slice(0, 5),     // Limit to 5 recommendations
+            similar 
+          });
+          observer.complete();
+        });
       })
-      .slice(0, 3);
-  }
-
-  private getAveragePublicationDate(books: Book[]): Date {
-    const times = books
-      .map(b => new Date(b.publication_date).getTime())
-      .filter(t => !isNaN(t));
-    const avg = times.reduce((sum, t) => sum + t, 0) / times.length;
-    return new Date(avg);
+    );
   }
 }
