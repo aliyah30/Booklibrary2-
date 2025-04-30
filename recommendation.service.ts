@@ -7,45 +7,33 @@ import { BookService } from '../book-detail/book.service';
 @Injectable({
   providedIn: 'root'
 })
-export class RecommendationService {
-  private apiUrl = 'http://localhost:5000/api/recommendations';
+export class RecommendationService;
 
   constructor(
     private http: HttpClient,
     private bookService: BookService
   ) {}
 
-  getRecommendations(borrowedBooks: Book[]): Observable<{
-    byAuthor: Book[],
-    byDate: Book[],
-    similar: Book[]
-  }> {
-    return forkJoin({
-      allBooks: this.bookService.getBooks(),
-      recommendations: this.getRecommendationsByHistory(borrowedBooks)
-    }).pipe(
-      map(({ allBooks, recommendations }) => {
-        const byAuthor = this.getBooksByAuthors(allBooks, borrowedBooks);
-        const byDate = this.getBooksByDate(allBooks, borrowedBooks);
-        return {
-          byAuthor,
-          byDate,
-          similar: recommendations
-        };
-      })
-    );
-  }
+getRecommendations(borrowedBooks: Book[]): Observable<{
+  byAuthor: Book[],
+  byDate: Book[],
+  similar: Book[]
+}> {
+  return this.bookService.getBooks().pipe(
+    map(allBooks => {
+      const byAuthor = this.getBooksByAuthors(allBooks, borrowedBooks);
+      const byDate = this.getBooksByDate(allBooks, borrowedBooks);
+      const similar = this.getRecommendationsByHistory(allBooks, borrowedBooks);
+      return { byAuthor, byDate, similar };
+    })
+  );
+}
 
-  private getRecommendationsByHistory(borrowedBooks: Book[]): Observable<Book[]> {
-    // You can enhance this with actual backend calls for more sophisticated recommendations
-    return this.bookService.getBooks().pipe(
-      map(books => {
-        return books.filter(book => 
-          !borrowedBooks.find(b => b.book_id === book.book_id)
-        ).slice(0, 3);
-      })
-    );
-  }
+private getRecommendationsByHistory(allBooks: Book[], borrowedBooks: Book[]): Book[] {
+  return allBooks.filter(book =>
+    !borrowedBooks.find(b => b.book_id === book.book_id)
+  ).slice(0, 3);
+}
 
   private getBooksByAuthors(allBooks: Book[], borrowedBooks: Book[]): Book[] {
     const authors = new Set(borrowedBooks.map(book => book.author));
