@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
-import { Book } from '../book-detail/book.model';
-import { BookService } from '../book-detail/book.service';
-import { RecommendationService } from '../services/recommendation.service';
+import { Book } from './book.model';
+import { BookService } from './book.service';
+import { RecommendationService } from './recommendation.service';
 import { HttpClient } from '@angular/common/http';
 import { catchError, forkJoin, Observable, of } from 'rxjs';
 
